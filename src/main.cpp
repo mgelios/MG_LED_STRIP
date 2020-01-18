@@ -65,6 +65,25 @@ void fireAnimationLoopStep() {
   }
 }
 
+int currentHSVColor = 0;
+int nextHSVColor = 0;
+
+void randomHsvTransitionStep() {
+  if (currentHSVColor == nextHSVColor) {
+    nextHSVColor = random(256);
+  }
+
+  if (currentHSVColor > nextHSVColor) {
+    currentHSVColor -= 1;
+  } else if (currentHSVColor < nextHSVColor) {
+    currentHSVColor += 1;
+  }
+
+  for (int i = 0; i < NUMBER_OF_LEDS; i++) {
+    leds[i].setHSV(currentHSVColor, 255, 255);
+  }
+}
+
 void loop() {
   while (true) {
     if (counter > 255) {
@@ -75,7 +94,8 @@ void loop() {
     //globalHSVLoopStep();
     //smallHSVLoopStep();
     //whiteBlinkLoopStep();
-    fireAnimationLoopStep();
+    //fireAnimationLoopStep();
+    randomHsvTransitionStep();
 
     FastLED.show();
     delay(100);
