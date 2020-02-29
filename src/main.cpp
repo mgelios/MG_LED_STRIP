@@ -7,8 +7,9 @@
 
 CRGB leds[112];
 int counter = 0;
-int NUMBER_OF_LEDS = 112;
+const int NUMBER_OF_LEDS = 112;
 short fire_energy[112];
+short hsvState[112];
 CRGB fire_colors[8] = {0x000000, 0x3F0000, 0x7F0000, 0xFF0000, 0xFF3F00, 0xFF7F00, 0xFFBF00, 0xFFFF00};
 
 void setup() {
@@ -16,6 +17,21 @@ void setup() {
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUMBER_OF_LEDS).setCorrection(TypicalSMD5050);
   FastLED.setBrightness(127);
   memset(fire_energy, 0, sizeof(fire_energy));
+  memset(hsvState, 0, sizeof(hsvState));
+  short localCounter = 0;
+  for (int i = 0; i < NUMBER_OF_LEDS / 2; i++) {
+    hsvState[i] = localCounter;
+    if (localCounter < 255) {
+      localCounter++;
+    }
+  }
+
+  for (int i = NUMBER_OF_LEDS / 2; i < NUMBER_OF_LEDS; i++) {
+    hsvState[i] = localCounter;
+    if (localCounter > 0) {
+      localCounter--;
+    }
+  }
 }
 
 void colorBlinkLoopStep() {
@@ -84,6 +100,21 @@ void randomHsvTransitionStep() {
   }
 }
 
+
+void centralHSVLoopStep() {
+  for (int i = 0; i < NUMBER_OF_LEDS; i++) {
+    if (hsvState[i] < 255) {
+      hsvState[i] += 1;
+    } else {
+      hsvState[i] = 0;
+    }
+  }
+
+  for (int i = 0; i < NUMBER_OF_LEDS; i++) {
+    leds[i].setHSV(hsvState[i], 255, 255);
+  }
+}
+
 void loop() {
   while (true) {
     if (counter > 255) {
@@ -95,10 +126,11 @@ void loop() {
     //smallHSVLoopStep();
     //whiteBlinkLoopStep();
     //fireAnimationLoopStep();
-    randomHsvTransitionStep();
+    //randomHsvTransitionStep();
+    centralHSVLoopStep();
 
     FastLED.show();
-    delay(100);
+    delay(50);
 
     counter++;
   }
