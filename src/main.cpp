@@ -5,14 +5,25 @@
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 
-CRGB leds[112];
+int BUTTON_PIN = 2;
+int BUTTON_TIMESLOT_THRESHOLD = 300;
+int buttonTimeslotCounter = 0;
+
+int DELAY_SIZE = 50;
+
+int CURRENT_EFFECT = 0;
+int NUMBER_OF_EFFECTS = 1;
+
 int counter = 0;
 const int NUMBER_OF_LEDS = 112;
 short fire_energy[112];
 short hsvState[112];
+CRGB leds[112];
 CRGB fire_colors[8] = {0x000000, 0x3F0000, 0x7F0000, 0xFF0000, 0xFF3F00, 0xFF7F00, 0xFFBF00, 0xFFFF00};
 
 void setup() {
+  pinMode(BUTTON_PIN, INPUT);
+
   delay(1000);
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUMBER_OF_LEDS).setCorrection(TypicalSMD5050);
   FastLED.setBrightness(127);
@@ -33,6 +44,10 @@ void setup() {
     }
   }
 }
+
+//-------------------------------------------------------------------
+// steps of effects
+//-------------------------------------------------------------------
 
 void colorBlinkLoopStep() {
   for (int i = 0; i < NUMBER_OF_LEDS; i++) {
@@ -115,22 +130,45 @@ void centralHSVLoopStep() {
   }
 }
 
+boolean isButtonPressed() {
+  if (buttonTimeslotCounter >= BUTTON_TIMESLOT_THRESHOLD) {
+    buttonTimeslotCounter = 0;
+    if (digitalRead(BUTTON_PIN) == HIGH) {
+      return true;
+    }
+    return false;
+  }
+  return false;
+}
+
 void loop() {
   while (true) {
+    if (isButtonPressed()) {
+      CURRENT_EFFECT += 1;
+      if (CURRENT_EFFECT > 1) {
+        CURRENT_EFFECT = 0;
+      }
+    }
+
     if (counter > 255) {
       counter = 0;
     }
 
-    //colorBlinkLoopStep();
     //globalHSVLoopStep();
     //smallHSVLoopStep();
     //whiteBlinkLoopStep();
     //fireAnimationLoopStep();
     //randomHsvTransitionStep();
-    centralHSVLoopStep();
+
+    if (CURRENT_EFFECT == 0) {
+      centralHSVLoopStep();
+    } else if (CURRENT_EFFECT == 1) {
+      colorBlinkLoopStep();
+    }
 
     FastLED.show();
-    delay(50);
+    delay(DELAY_SIZE);
+    buttonTimeslotCounter += DELAY_SIZE;
 
     counter++;
   }
