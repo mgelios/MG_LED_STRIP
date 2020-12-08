@@ -12,7 +12,7 @@ int buttonTimeslotCounter = 0;
 int DELAY_SIZE = 50;
 
 int CURRENT_EFFECT = 0;
-int NUMBER_OF_EFFECTS = 1;
+int NUMBER_OF_EFFECTS = 9;
 
 int counter = 0;
 const int NUMBER_OF_LEDS = 112;
@@ -25,7 +25,8 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT);
 
   delay(1000);
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUMBER_OF_LEDS).setCorrection(TypicalSMD5050);
+  //FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUMBER_OF_LEDS).setCorrection(TypicalSMD5050);
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUMBER_OF_LEDS).setCorrection(UncorrectedColor);
   FastLED.setBrightness(127);
   memset(fire_energy, 0, sizeof(fire_energy));
   memset(hsvState, 0, sizeof(hsvState));
@@ -130,6 +131,18 @@ void centralHSVLoopStep() {
   }
 }
 
+void warmWhiteLoopStep() {
+  for(int i = 0; i < NUMBER_OF_LEDS; i++) {
+    leds[i].setColorCode(CRGB::FairyLightNCC);
+  }
+}
+
+void pureWhiteLoopStep() {
+  for(int i = 0; i < NUMBER_OF_LEDS; i++) {
+    leds[i].setColorCode(CRGB::White);
+  }
+}
+
 boolean isButtonPressed() {
   if (buttonTimeslotCounter >= BUTTON_TIMESLOT_THRESHOLD) {
     buttonTimeslotCounter = 0;
@@ -145,7 +158,7 @@ void loop() {
   while (true) {
     if (isButtonPressed()) {
       CURRENT_EFFECT += 1;
-      if (CURRENT_EFFECT > 1) {
+      if (CURRENT_EFFECT > NUMBER_OF_EFFECTS - 1) {
         CURRENT_EFFECT = 0;
       }
     }
@@ -154,16 +167,24 @@ void loop() {
       counter = 0;
     }
 
-    //globalHSVLoopStep();
-    //smallHSVLoopStep();
-    //whiteBlinkLoopStep();
-    //fireAnimationLoopStep();
-    //randomHsvTransitionStep();
-
     if (CURRENT_EFFECT == 0) {
       centralHSVLoopStep();
     } else if (CURRENT_EFFECT == 1) {
       colorBlinkLoopStep();
+    } else if (CURRENT_EFFECT == 2) {
+      globalHSVLoopStep();
+    } else if (CURRENT_EFFECT == 3) {
+      whiteBlinkLoopStep();
+    } else if (CURRENT_EFFECT == 4) {
+      smallHSVLoopStep();
+    } else if (CURRENT_EFFECT == 5) {
+      fireAnimationLoopStep();
+    } else if (CURRENT_EFFECT == 6) {
+      randomHsvTransitionStep();
+    } else if (CURRENT_EFFECT == 7) {
+      warmWhiteLoopStep();
+    } else if (CURRENT_EFFECT == 8) {
+      pureWhiteLoopStep();
     }
 
     FastLED.show();
